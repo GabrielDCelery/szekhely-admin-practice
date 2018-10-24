@@ -3,9 +3,10 @@
 const _ = require('lodash');
 const controllers = require('./controllers');
 const isHex = require('is-hex');
+const randomstring = require('randomstring');
 
 const createTestEmail = () => {
-    return `${new Date().getTime()}@gmail.com`;
+    return `${randomstring.generate(16)}@gmail.com`;
 };
 
 describe('Admin authentication methods', () => {
@@ -55,16 +56,6 @@ describe('Admin authentication methods', () => {
             }).toThrow();
         });
 
-        test('throws an error if the user is already registered', async () => {
-            const _email = createTestEmail();
-
-            await controller.addNew(_email, 'somepassword');
-
-            expect(async () => {
-                await controller.addNew(_email, 'somepassword');
-            }).toThrow();
-        });
-
         test('sets the new administrator to inactive by default', async () => {
             const _admin = await controller.addNew(createTestEmail(), 'somepassword');
 
@@ -81,6 +72,16 @@ describe('Admin authentication methods', () => {
             const _admin = await controller.addNew(createTestEmail(), 'somepassword');
 
             expect(_admin.num_of_failed_login_attempts).toEqual(0);
+        });
+
+        test('throws an error if the user is already registered', async () => {
+            const _email = createTestEmail();
+
+            await controller.addNew(_email, 'somepassword');
+
+            expect(async () => {
+                await controller.addNew(_email, 'somepassword');
+            }).toThrow();
         });
     });
 
