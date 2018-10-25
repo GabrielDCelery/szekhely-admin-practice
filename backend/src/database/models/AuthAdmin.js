@@ -2,9 +2,8 @@
 
 const { Model } = require('objection');
 const uuidv4 = require('uuid/v4');
-const { DbErrors } = require('objection-db-errors');
 
-class AuthAdmin extends DbErrors(Model) {
+class AuthAdmin extends Model {
     static get tableName () {
         return 'auth_admins';
     }
@@ -12,17 +11,20 @@ class AuthAdmin extends DbErrors(Model) {
     static get jsonSchema () {
         return {
             type: 'object',
+            /*
             required: [
                 'email',
                 'password',
                 'salt',
                 'status'
             ],
+            */
             properties: {
                 id: { type: 'string' },
                 email: {
                     type: 'string',
-                    unique: true
+                    unique: true,
+                    pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}'
                 },
                 password: { type: 'string' },
                 salt: { type: 'string' },
