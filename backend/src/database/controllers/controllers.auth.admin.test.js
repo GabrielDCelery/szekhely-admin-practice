@@ -13,8 +13,8 @@ describe('Admin authentication methods', () => {
     const controller = controllers.get('auth.admin');
 
     describe('_createSalt ()', () => {
-        test('creates a 32 bytes 64 characters long hexadecimal salt', () => {
-            const _salt = controller._createSalt();
+        test('creates a 32 bytes 64 characters long hexadecimal salt', async () => {
+            const _salt = await controller._createSalt();
 
             expect(_salt).toHaveLength(64);
             expect(isHex(_salt)).toBeTruthy();
@@ -23,8 +23,8 @@ describe('Admin authentication methods', () => {
 
     describe('_saltAndHashPassword (_salt, _password)', () => {
         test('creates a 32 bytes 64 characters long hexadecimal password', async () => {
-            const _salt = controller._createSalt();
-            const _saltedAndHashedPassword = controller._saltAndHashPassword(_salt, 'somerandompassword');
+            const _salt = await controller._createSalt();
+            const _saltedAndHashedPassword = await controller._saltAndHashPassword(_salt, 'somerandompassword');
 
             expect(_saltedAndHashedPassword).toHaveLength(64);
             expect(isHex(_saltedAndHashedPassword)).toBeTruthy();
@@ -45,8 +45,8 @@ describe('Admin authentication methods', () => {
             const _email = createTestEmail();
             const _admin = await controller.addNew(_email, 'somepassword');
 
-            const _salt = _spyCreateSalt.mock.results[0].value;
-            const _saltedAndHashedPassword = _spySaltAndHashPassword.mock.results[0].value;
+            const _salt = await _spyCreateSalt.mock.results[0].value;
+            const _saltedAndHashedPassword = await _spySaltAndHashPassword.mock.results[0].value;
 
             expect(_spyCreateSalt).toHaveBeenCalledTimes(1);
             expect(_spySaltAndHashPassword).toHaveBeenCalledWith(_salt, 'somepassword');
@@ -130,7 +130,9 @@ describe('Admin authentication methods', () => {
             await controller.addNew(_email, 'somepassword');
             await controller.activate(_email);
 
-            expect(await controller.authenticateByEmailAndPassword(_email, 'somepassword')).toEqual(true);
+            const _admin = await controller.authenticateByEmailAndPassword(_email, 'somepassword');
+
+            expect(_admin.email).toEqual(_email);
         });
 
         test('throws an error if user is inactive', async () => {
@@ -145,8 +147,34 @@ describe('Admin authentication methods', () => {
 
             throw new Error('Test failed to run properly');
         });
-    });
 
-    describe('validateByJWTToken (_jwt)', () => {
+        test('throws an error if password is invalid', async () => {
+            try {
+                const _email = createTestEmail();
+
+                await controller.addNew(_email, 'somepassword');
+                await controller.activate(_email);
+                await controller.authenticateByEmailAndPassword(_email, 'wrongpassword');
+            } catch (_error) {
+                return expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
+            }
+
+            throw new Error('Test failed to run properly');
+        });
     });
+/*
+    describe('createJWTToken (_email, _password)', () => {
+        test('creates a signed jwt token', async () => {
+            const _email = createTestEmail();
+
+            await controller.addNew(_email, 'somepassword');
+            await controller.activate(_email);
+
+            expect(await controller.createJWTToken(_email, 'somepassword')).toEqual('');
+        });
+
+        test('throws an error if ', async () => {
+        });
+    });
+*/
 });

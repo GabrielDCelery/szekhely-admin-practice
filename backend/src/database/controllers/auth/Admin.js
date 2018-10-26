@@ -1,7 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
-// const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 const customErrors = require('../../../helpers/customErrors');
 
 class Admin {
@@ -11,19 +11,36 @@ class Admin {
         this.STATUS_ACTIVE = 1;
         this.ERROR_STATUS_INACTIVE = 'Inactive user!';
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
+        this.JWT_EXPIRES_IN = 28800;
     }
 
     _createSalt () {
-        return crypto.randomBytes(32).toString('hex');
+        return new Promise((resolve, reject) => {
+            crypto.randomBytes(32, (_error, _buffer) => {
+                if (_error) {
+                    return reject(_error);
+                };
+
+                return resolve(_buffer.toString('hex'));
+            });
+        });
     }
 
     _saltAndHashPassword (_salt, _password) {
-        return crypto.pbkdf2Sync(_password, _salt, 100000, 32, 'sha512').toString('hex');
+        return new Promise((resolve, reject) => {
+            crypto.pbkdf2(_password, _salt, 100000, 32, 'sha512', (_error, _derivedKey) => {
+                if (_error) {
+                    return reject(_error);
+                };
+
+                return resolve(_derivedKey.toString('hex'));
+            });
+        });
     }
 
     async addNew (_email, _password) {
-        const _salt = this._createSalt();
-        const _saltedAndHashedPassword = this._saltAndHashPassword(_salt, _password);
+        const _salt = await this._createSalt();
+        const _saltedAndHashedPassword = await this._saltAndHashPassword(_salt, _password);
 
         return this.models.AuthAdmin
             .query()
@@ -47,7 +64,7 @@ class Admin {
     async authenticateByEmailAndPassword (_email, _password) {
         const _admin = await this.models.AuthAdmin
             .query()
-            .select('salt', 'password', 'status')
+            .select('email', 'salt', 'password', 'status')
             .where('email', _email)
             .first();
 
@@ -55,14 +72,26 @@ class Admin {
             throw new Error(this.ERROR_STATUS_INACTIVE);
         }
 
-        return this._saltAndHashPassword(_admin.salt, _password) === _admin.password;
+        if (await this._saltAndHashPassword(_admin.salt, _password) !== _admin.password) {
+            throw new Error(this.ERROR_PASSWORD_INVALID);
+        }
+
+        return {
+            email: _admin.email
+        };
     }
 
-    async validateByJWTToken (_token) {
+    async createJWTToken (_email, _password) {
+        const _admin = await this.authenticateByEmailAndPassword(_email, _password);
 
+        return jwt.sign(_admin, 'somecert', {
+            expiresIn: this.JWT_EXPIRES_IN
+        });
     }
 
-    async createJWTToken () {}
+    async authenticateByJWTToken (_token) {
+
+    }
 }
 
 module.exports = Admin;
