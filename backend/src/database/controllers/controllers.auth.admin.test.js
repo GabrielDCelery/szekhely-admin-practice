@@ -162,7 +162,7 @@ describe('Admin authentication methods', () => {
             throw new Error('Test failed to run properly');
         });
     });
-/*
+
     describe('createJWTToken (_email, _password)', () => {
         test('creates a signed jwt token', async () => {
             const _email = createTestEmail();
@@ -176,5 +176,4 @@ describe('Admin authentication methods', () => {
         test('throws an error if ', async () => {
         });
     });
-*/
 });

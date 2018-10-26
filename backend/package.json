@@ -32,7 +32,7 @@
   },
   "scripts": {
     "pretest": "rm -f ./dev/test.sqlite3 && knex migrate:latest",
-    "test": "node ./node_modules/jest/bin/jest.js",
+    "test": "JWT_SECRET=myjwtsecret node ./node_modules/jest/bin/jest.js",
     "start": "node ./app.js"
   }
 }

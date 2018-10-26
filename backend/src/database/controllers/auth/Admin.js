@@ -3,6 +3,9 @@
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const customErrors = require('../../../helpers/customErrors');
+const environmentVariableGetter = require('../../../helpers/environmentVariableGetter');
+
+const ENV_VARIABLE_JWT_SECRET = environmentVariableGetter.get('JWT_SECRET');
 
 class Admin {
     constructor (_models) {
@@ -84,7 +87,7 @@ class Admin {
     async createJWTToken (_email, _password) {
         const _admin = await this.authenticateByEmailAndPassword(_email, _password);
 
-        return jwt.sign(_admin, 'somecert', {
+        return jwt.sign(_admin, ENV_VARIABLE_JWT_SECRET, {
             expiresIn: this.JWT_EXPIRES_IN
         });
     }
