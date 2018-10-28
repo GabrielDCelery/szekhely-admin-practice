@@ -165,15 +165,41 @@ describe('Admin authentication methods', () => {
 
     describe('createJWTToken (_email, _password)', () => {
         test('creates a signed jwt token', async () => {
+            const REGEXP_JWT = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
             const _email = createTestEmail();
 
             await controller.addNew(_email, 'somepassword');
             await controller.activate(_email);
 
-            expect(await controller.createJWTToken(_email, 'somepassword')).toEqual('');
+            const _token = await controller.createJWTToken(_email, 'somepassword');
+
+            expect(REGEXP_JWT.test(_token)).toBeTruthy();
         });
 
-        test('throws an error if ', async () => {
+        test('validates the user email and password', async () => {
+            const _email = createTestEmail();
+            const _spyAuthenticateByEmailAndPassword = jest.spyOn(controller, 'authenticateByEmailAndPassword');
+
+            await controller.addNew(_email, 'somepassword');
+            await controller.activate(_email);
+            await controller.createJWTToken(_email, 'somepassword');
+
+            expect(_spyAuthenticateByEmailAndPassword).toHaveBeenCalledTimes(1);
+            expect(_spyAuthenticateByEmailAndPassword).toHaveBeenCalledWith(_email, 'somepassword');
+        });
+    });
+
+    describe('authenticateByJWTToken (_jwtToken)', () => {
+        test('validates a jwt token issed by the system', async () => {
+            const _email = createTestEmail();
+
+            await controller.addNew(_email, 'somepassword');
+            await controller.activate(_email);
+
+            const _token = await controller.createJWTToken(_email, 'somepassword');
+            const _decoded = await controller.authenticateByJWTToken(_token);
+
+            expect(_decoded.email).toEqual(_email);
         });
     });
 });

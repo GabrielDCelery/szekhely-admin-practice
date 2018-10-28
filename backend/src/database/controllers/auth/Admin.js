@@ -87,13 +87,29 @@ class Admin {
     async createJWTToken (_email, _password) {
         const _admin = await this.authenticateByEmailAndPassword(_email, _password);
 
-        return jwt.sign(_admin, ENV_VARIABLE_JWT_SECRET, {
-            expiresIn: this.JWT_EXPIRES_IN
+        return new Promise((resolve, reject) => {
+            jwt.sign(_admin, ENV_VARIABLE_JWT_SECRET, {
+                expiresIn: this.JWT_EXPIRES_IN
+            }, (_error, _token) => {
+                if (_error) {
+                    return reject(_error);
+                };
+
+                return resolve(_token);
+            });
         });
     }
 
     async authenticateByJWTToken (_token) {
+        return new Promise((resolve, reject) => {
+            jwt.verify(_token, ENV_VARIABLE_JWT_SECRET, (_error, _decoded) => {
+                if (_error) {
+                    return reject(_error);
+                };
 
+                return resolve(_decoded);
+            });
+        });
     }
 }
 
