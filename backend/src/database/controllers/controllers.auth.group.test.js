@@ -40,4 +40,26 @@ describe('Admin authentication methods', () => {
             throw new Error('Test failed to run properly');
         });
     });
+
+    describe('activate (_name)', () => {
+        test('activates an administrative user', async () => {
+            const _name = createGroupName();
+
+            await controller.addNew(_name, 'somepassword');
+            await controller.activate(_name);
+
+            const _admin = await controller.models.AuthGroup.query().where({ name: _name }).first();
+
+            expect(_admin.name).toEqual(_name);
+            expect(_admin.status).toEqual(controller.STATUS_ACTIVE);
+        });
+
+        test('does not change the status of other users', async () => {
+            const _name = createGroupName();
+
+            await controller.addNew(_name);
+
+            expect(await controller.activate(_name)).toEqual(1);
+        });
+    });
 });

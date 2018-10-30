@@ -22,8 +22,11 @@ class Group {
             });
     }
 
-    async activate () {
-
+    async activate (_name) {
+        return this.models.AuthGroup
+            .query()
+            .update({ status: this.STATUS_ACTIVE })
+            .where('name', _name);
     }
 }
 
