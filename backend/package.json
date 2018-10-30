@@ -33,7 +33,7 @@
   },
   "scripts": {
     "pretest": "rm -f ./dev/test.sqlite3 && knex migrate:latest",
-    "test": "cross-env JWT_SECRET=myjwtsecret node ./node_modules/jest/bin/jest.js",
+    "test": "cross-env JWT_SECRET=myjwtsecret node ./node_modules/jest/bin/jest.js --verbose",
     "start": "node ./app.js"
   }
 }

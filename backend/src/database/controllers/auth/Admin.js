@@ -2,10 +2,10 @@
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const customErrors = require('../../../helpers/customErrors');
-const environmentVariableGetter = require('../../../helpers/environmentVariableGetter');
+const CustomDbError = require('../../../helpers/CustomDbError');
+const EnvironmentVariables = require('../../../helpers/EnvironmentVariables');
 
-const ENV_VARIABLE_JWT_SECRET = environmentVariableGetter.get('JWT_SECRET');
+const ENV_VARIABLE_JWT_SECRET = EnvironmentVariables.get('JWT_SECRET');
 
 class Admin {
     constructor (_models) {
@@ -54,7 +54,9 @@ class Admin {
                 status: this.STATUS_INACTIVE,
                 is_super: false
             })
-            .catch(customErrors.errorHandlerWrapper('db'));
+            .catch(_error => {
+                throw new CustomDbError(_error.message);
+            });
     }
 
     async activate (_email) {

@@ -1,6 +1,7 @@
 'use strict';
 
 const { Model } = require('objection');
+const uuidv4 = require('uuid/v4');
 
 class AuthGroup extends Model {
     static get tableName () {
@@ -13,10 +14,25 @@ class AuthGroup extends Model {
             required: [],
             properties: {
                 id: { type: 'string' },
-                name: { type: 'string' },
+                name: {
+                    type: 'string',
+                    unique: true
+                },
                 status: { type: 'integer' }
             }
         };
+    }
+
+    $beforeInsert () {
+        const _date = new Date().toISOString();
+
+        this.id = uuidv4();
+        this.created_at = _date;
+        this.updated_at = _date;
+    }
+
+    $beforeUpdate () {
+        this.updated_at = new Date().toISOString();
     }
 }
 

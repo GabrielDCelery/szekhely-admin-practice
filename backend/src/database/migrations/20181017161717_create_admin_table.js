@@ -15,7 +15,7 @@ exports.up = _knex => {
 
         await _knex.schema.createTable('auth_groups', _table => {
             _table.uuid('id').primary();
-            _table.string('name');
+            _table.string('name').unique();
             _table.integer('status');
             _table.timestamps();
         });

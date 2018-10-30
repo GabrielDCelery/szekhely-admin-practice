@@ -4,6 +4,7 @@ const _ = require('lodash');
 const controllers = require('./controllers');
 const isHex = require('is-hex');
 const randomstring = require('randomstring');
+const CustomDbError = require('../../helpers/CustomDbError');
 
 const createTestEmail = () => {
     return `${randomstring.generate(16)}@gmail.com`;
@@ -81,7 +82,7 @@ describe('Admin authentication methods', () => {
             try {
                 await controller.addNew('notanemail', 'somepassword');
             } catch (_error) {
-                return expect(_error.message).toEqual('Invalid email!');
+                return expect(_error.message).toEqual(CustomDbError.ERROR_SHOULD_MATCH_PATTERN);
             }
 
             throw new Error('Test failed to run properly');
@@ -94,7 +95,7 @@ describe('Admin authentication methods', () => {
                 await controller.addNew(_email, 'somepassword');
                 await controller.addNew(_email, 'somepassword');
             } catch (_error) {
-                return expect(_error.message).toEqual('Email already exists!');
+                return expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
             }
 
             throw new Error('Test failed to run properly');
