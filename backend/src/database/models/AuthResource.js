@@ -1,6 +1,7 @@
 'use strict';
 
 const { Model } = require('objection');
+const uuidv4 = require('uuid/v4');
 
 class AuthResource extends Model {
     static get tableName () {
@@ -10,12 +11,14 @@ class AuthResource extends Model {
     static get jsonSchema () {
         return {
             type: 'object',
+            /*
             required: [
                 'id',
                 'type',
                 'method',
                 'status'
             ],
+            */
             properties: {
                 id: { type: 'string' },
                 type: { type: 'integer' },
@@ -28,6 +31,7 @@ class AuthResource extends Model {
     $beforeInsert () {
         const _date = new Date().toISOString();
 
+        this.id = uuidv4();
         this.created_at = _date;
         this.updated_at = _date;
     }

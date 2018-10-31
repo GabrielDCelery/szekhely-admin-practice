@@ -11,15 +11,17 @@ Model.knex(knex);
 
 const AuthAdmin = require('./auth/Admin');
 const AuthGroup = require('./auth/Group');
+const AuthResource = require('./auth/Resource');
 
 const AuthAdminModel = require('../models/AuthAdmin');
 const AuthGroupModel = require('../models/AuthGroup');
+const AuthResourceModel = require('../models/AuthResource');
 
 const CONTROLLERS = {
     auth: {
         admin: new AuthAdmin({ AuthAdmin: AuthAdminModel }),
         group: new AuthGroup({ AuthGroup: AuthGroupModel }),
-        resources: null
+        resource: new AuthResource({ AuthResource: AuthResourceModel })
     }
 };
 

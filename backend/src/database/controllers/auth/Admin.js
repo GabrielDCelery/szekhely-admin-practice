@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const CustomDbError = require('../../../helpers/CustomDbError');
 const EnvironmentVariables = require('../../../helpers/EnvironmentVariables');
+const ControllerEnumValidator = require('../../../helpers/ControllerEnumValidator');
 
 const ENV_VARIABLE_JWT_SECRET = EnvironmentVariables.get('JWT_SECRET');
 
@@ -15,6 +16,7 @@ class Admin {
         this.ERROR_STATUS_INACTIVE = 'Inactive user!';
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
         this.JWT_EXPIRES_IN = 28800;
+        this.statusEnumValidator = new ControllerEnumValidator(this, 'STATUS');
     }
 
     _createSalt () {
@@ -41,7 +43,7 @@ class Admin {
         });
     }
 
-    async addNew (_email, _password) {
+    async addNew (_email, _password, _status) {
         const _salt = await this._createSalt();
         const _saltedAndHashedPassword = await this._saltAndHashPassword(_salt, _password);
 
@@ -51,7 +53,7 @@ class Admin {
                 email: _email,
                 password: _saltedAndHashedPassword,
                 salt: _salt,
-                status: this.STATUS_INACTIVE,
+                status: this.statusEnumValidator.validate(_status, true) || this.STATUS_INACTIVE,
                 is_super: false
             })
             .catch(_error => {

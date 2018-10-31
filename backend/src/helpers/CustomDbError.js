@@ -15,17 +15,19 @@ class CustomDbError extends Error {
             'SQLITE_CONSTRAINT: UNIQUE constraint failed': CustomDbError.ERROR_DUPLICATE_RECORD
         };
 
-        this._replaceMessage(_message);
+        this.message = this._getReplaceMessage(_message);
     }
 
-    _replaceMessage (_message) {
-        _.forEach(this.errorLookups, (_customErrorMessage, _k) => {
-            if (_message.match(_k)) {
-                this.message = _customErrorMessage;
+    _getReplaceMessage (_message) {
+        const _keys = Object.keys(this.errorLookups);
 
-                return false;
+        for (let _i = 0, _iMax = _keys.length; _i < _iMax; _i++) {
+            if (_message.match(_keys[_i])) {
+                return this.errorLookups[_keys[_i]];
             }
-        });
+        }
+
+        return _message;
     }
 
     static get ERROR_DUPLICATE_RECORD () {

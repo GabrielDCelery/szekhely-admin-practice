@@ -9,7 +9,7 @@ const createGroupName = () => {
     return randomstring.generate(16);
 };
 
-describe('Admin authentication methods', () => {
+describe('Admin group controller', () => {
     const controller = controllers.get('auth.group');
 
     describe('addNew (_name)', () => {
@@ -37,7 +37,15 @@ describe('Admin authentication methods', () => {
                 return expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
             }
 
-            throw new Error('Test failed to run properly');
+            throw new Error('Expected test to throw!');
+        });
+
+        test('sets the group to active if the "_status" flag is set to active', async () => {
+            const _name = createGroupName();
+            const _group = await controller.addNew(_name, controller.STATUS_ACTIVE);
+
+            expect(_group.name).toEqual(_name);
+            expect(_group.status).toEqual(controller.STATUS_ACTIVE);
         });
     });
 

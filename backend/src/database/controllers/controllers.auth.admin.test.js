@@ -10,7 +10,7 @@ const createTestEmail = () => {
     return `${randomstring.generate(16)}@gmail.com`;
 };
 
-describe('Admin authentication methods', () => {
+describe('Admin auth controller', () => {
     const controller = controllers.get('auth.admin');
 
     describe('_createSalt ()', () => {
@@ -32,15 +32,15 @@ describe('Admin authentication methods', () => {
         });
     });
 
-    describe('addNew (_email, _password)', () => {
-        test('adds a new administrative user', async () => {
+    describe('addNew (_email, _password, _status)', () => {
+        test('adds a new administrator', async () => {
             const _email = createTestEmail();
             const _admin = await controller.addNew(_email, 'somepassword');
 
             expect(!_.isNil(_admin)).toBeTruthy();
         });
 
-        test('generates a random salt and salted+hashed password for the new administrative user', async () => {
+        test('generates a random salt and salted+hashed password for the new administrator', async () => {
             const _spyCreateSalt = jest.spyOn(controller, '_createSalt');
             const _spySaltAndHashPassword = jest.spyOn(controller, '_saltAndHashPassword');
             const _email = createTestEmail();
@@ -85,7 +85,7 @@ describe('Admin authentication methods', () => {
                 return expect(_error.message).toEqual(CustomDbError.ERROR_SHOULD_MATCH_PATTERN);
             }
 
-            throw new Error('Test failed to run properly');
+            throw new Error('Expected test to throw!');
         });
 
         test('throws an error if the user is already registered', async () => {
@@ -98,12 +98,20 @@ describe('Admin authentication methods', () => {
                 return expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
             }
 
-            throw new Error('Test failed to run properly');
+            throw new Error('Expected test to throw!');
+        });
+
+        test('sets the administrator active if the "_status" flag is set to active', async () => {
+            const _email = createTestEmail();
+            const _admin = await controller.addNew(_email, 'somepassword', controller.STATUS_ACTIVE);
+
+            expect(_admin.email).toEqual(_email);
+            expect(_admin.status).toEqual(controller.STATUS_ACTIVE);
         });
     });
 
     describe('activate (_email)', () => {
-        test('activates an administrative user', async () => {
+        test('activates an administrator', async () => {
             const _email = createTestEmail();
 
             await controller.addNew(_email, 'somepassword');
@@ -125,7 +133,7 @@ describe('Admin authentication methods', () => {
     });
 
     describe('authenticateByEmailAndPassword (_email, _password)', () => {
-        test('authenticates administrative user', async () => {
+        test('authenticates administrator', async () => {
             const _email = createTestEmail();
 
             await controller.addNew(_email, 'somepassword');
@@ -146,7 +154,7 @@ describe('Admin authentication methods', () => {
                 return expect(_error.message).toEqual(controller.ERROR_STATUS_INACTIVE);
             }
 
-            throw new Error('Test failed to run properly');
+            throw new Error('Expected test to throw!');
         });
 
         test('throws an error if password is invalid', async () => {
@@ -160,7 +168,7 @@ describe('Admin authentication methods', () => {
                 return expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
             }
 
-            throw new Error('Test failed to run properly');
+            throw new Error('Expected test to throw!');
         });
     });
 
