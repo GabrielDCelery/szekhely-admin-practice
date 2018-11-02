@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const CustomDbError = require('../../../helpers/CustomDbError');
 const ControllerEnumValidator = require('../../../helpers/ControllerEnumValidator');
 
@@ -31,7 +30,7 @@ class Resource {
                 throw new CustomDbError(_error.message);
             });
     }
-
+    /*
     _normalizeMethod (_method) {
         if (_.isNil(_method)) {
             return null;
@@ -49,6 +48,7 @@ class Resource {
     static _convertMethodToEnum (_method = '') {
         return `METHOD_${_method.toUpperCase()}`;
     }
+    */
 }
 
 module.exports = Resource;
