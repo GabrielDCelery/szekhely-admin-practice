@@ -14,9 +14,11 @@ describe('Admin group controller', () => {
 
     describe('addNew (_name)', () => {
         test('adds a new administrative group', async () => {
+            const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
             const _name = createGroupName();
             const _group = await controller.addNew(_name);
 
+            expect(REG_EXP_UUID.test(_group.id)).toBeTruthy();
             expect(_group.name).toEqual(_name);
         });
 

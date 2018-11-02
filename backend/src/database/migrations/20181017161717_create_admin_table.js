@@ -26,6 +26,7 @@ exports.up = _knex => {
             _table.integer('method');
             _table.integer('status');
             _table.timestamps();
+            _table.unique(['type', 'method']);
         });
 
         await _knex.schema.createTable('auth_admins_password_activation', _table => {

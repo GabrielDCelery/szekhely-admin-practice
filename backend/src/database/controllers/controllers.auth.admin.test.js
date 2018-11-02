@@ -1,6 +1,5 @@
 'use strict';
 
-const _ = require('lodash');
 const controllers = require('./controllers');
 const isHex = require('is-hex');
 const randomstring = require('randomstring');
@@ -34,10 +33,12 @@ describe('Admin auth controller', () => {
 
     describe('addNew (_email, _password, _status)', () => {
         test('adds a new administrator', async () => {
+            const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
             const _email = createTestEmail();
             const _admin = await controller.addNew(_email, 'somepassword');
 
-            expect(!_.isNil(_admin)).toBeTruthy();
+            expect(REG_EXP_UUID.test(_admin.id)).toBeTruthy();
+            expect(_admin.email).toEqual(_email);
         });
 
         test('generates a random salt and salted+hashed password for the new administrator', async () => {
@@ -51,7 +52,6 @@ describe('Admin auth controller', () => {
 
             expect(_spyCreateSalt).toHaveBeenCalledTimes(1);
             expect(_spySaltAndHashPassword).toHaveBeenCalledWith(_salt, 'somepassword');
-            expect(_admin.email).toEqual(_email);
             expect(_admin.salt).toEqual(_salt);
             expect(_admin.password).toEqual(_saltedAndHashedPassword);
 
@@ -174,7 +174,7 @@ describe('Admin auth controller', () => {
 
     describe('createJWTToken (_email, _password)', () => {
         test('creates a signed jwt token', async () => {
-            const REGEXP_JWT = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
+            const REG_EXP_JWT = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
             const _email = createTestEmail();
 
             await controller.addNew(_email, 'somepassword');
@@ -182,7 +182,7 @@ describe('Admin auth controller', () => {
 
             const _token = await controller.createJWTToken(_email, 'somepassword');
 
-            expect(REGEXP_JWT.test(_token)).toBeTruthy();
+            expect(REG_EXP_JWT.test(_token)).toBeTruthy();
         });
 
         test('validates the user email and password', async () => {
