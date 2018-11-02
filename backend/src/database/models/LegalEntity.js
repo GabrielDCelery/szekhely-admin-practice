@@ -5,7 +5,7 @@ const uuidv4 = require('uuid/v4');
 
 class AuthGroup extends Model {
     static get tableName () {
-        return 'auth_groups';
+        return 'legal_entities';
     }
 
     static get jsonSchema () {
