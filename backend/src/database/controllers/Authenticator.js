@@ -164,6 +164,13 @@ class Authenticator {
             .where('name', _name);
     }
 
+    async associateAdminAndGroup (_adminEmail, _groupName) {
+        const _admin = await this.models.AuthAdmin.query().findOne({ email: _adminEmail });
+        const _group = await this.models.AuthGroup.query().findOne({ name: _groupName });
+
+        return _admin.$relatedQuery('groups').relate(_group.id);
+    }
+
     async addNewResource (_type, _method, _status) {
         return this.models.AuthResource
             .query()

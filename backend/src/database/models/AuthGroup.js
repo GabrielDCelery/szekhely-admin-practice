@@ -23,6 +23,25 @@ class AuthGroup extends Model {
         };
     }
 
+    static get relationMappings () {
+        const Admin = require('./AuthAdmin');
+
+        return {
+            admins: {
+                relation: Model.ManyToManyRelation,
+                modelClass: Admin,
+                join: {
+                    from: 'auth_admins.id',
+                    through: {
+                        from: 'auth_admins_groups.admin_id',
+                        to: 'auth_admins_groups.group_id'
+                    },
+                    to: 'auth_groups.id'
+                }
+            }
+        };
+    }
+
     $beforeInsert () {
         const _date = new Date().toISOString();
 

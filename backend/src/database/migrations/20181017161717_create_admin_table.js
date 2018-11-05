@@ -38,15 +38,15 @@ exports.up = _knex => {
         });
 
         await _knex.schema.createTable('auth_admins_groups', _table => {
-            _table.uuid('admin').references('id').inTable('auth_admins').onDelete('CASCADE');
-            _table.uuid('group').references('id').inTable('auth_groups').onDelete('CASCADE');
-            _table.unique(['admin', 'group']);
+            _table.uuid('admin_id').references('id').inTable('auth_admins').onDelete('CASCADE');
+            _table.uuid('group_id').references('id').inTable('auth_groups').onDelete('CASCADE');
+            _table.unique(['admin_id', 'group_id']);
         });
 
         await _knex.schema.createTable('auth_resources_groups', _table => {
-            _table.uuid('resource').references('id').inTable('auth_resources').onDelete('CASCADE');
-            _table.uuid('group').references('id').inTable('auth_groups').onDelete('CASCADE');
-            _table.unique(['resource', 'group']);
+            _table.uuid('resource_id').references('id').inTable('auth_resources').onDelete('CASCADE');
+            _table.uuid('group_id').references('id').inTable('auth_groups').onDelete('CASCADE');
+            _table.unique(['resource_id', 'group_id']);
         });
     })();
 };

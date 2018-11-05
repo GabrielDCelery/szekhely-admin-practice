@@ -361,4 +361,27 @@ describe('Authenticator controller', () => {
             throw new Error('Expected test to throw!');
         });
     });
+
+    describe('associateAdminAndGroup (_adminEmail, _groupName)', () => {
+        test('creates an association between an admin and a group', async () => {
+            const _email = createTestEmail();
+            const _name = createGroupName();
+
+            const _admin = await controller.addNewAdmin(_email, 'somepassword');
+            const _group = await controller.addNewGroup(_name);
+
+            await controller.associateAdminAndGroup(_email, _name);
+            /*
+            const _relation = await controller.models.AuthAdmin
+                .query()
+                .join('auth_groups', _join => {
+                    _join.on('auth_admins.id', '=', 'auth_admins_groups.admin_id').on('auth_groups.id', '=', 'auth_admins_groups.group_id');
+                })
+                .where('auth_admins.id', _admin.id)
+                .where('auth_groups.id', _group.id);
+
+            console.log(_relation);
+            */
+        });
+    });
 });
