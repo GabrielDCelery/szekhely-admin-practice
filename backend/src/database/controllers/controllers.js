@@ -9,20 +9,18 @@ const knex = Knex(config.get(['knex', process.env.NODE_ENV]));
 
 Model.knex(knex);
 
-const AuthAdmin = require('./auth/Admin');
-const AuthGroup = require('./auth/Group');
-const AuthResource = require('./auth/Resource');
+const Authenticator = require('./Authenticator');
 
 const AuthAdminModel = require('../models/AuthAdmin');
 const AuthGroupModel = require('../models/AuthGroup');
 const AuthResourceModel = require('../models/AuthResource');
 
 const CONTROLLERS = {
-    auth: {
-        admin: new AuthAdmin({ AuthAdmin: AuthAdminModel }),
-        group: new AuthGroup({ AuthGroup: AuthGroupModel }),
-        resource: new AuthResource({ AuthResource: AuthResourceModel })
-    }
+    authenticator: new Authenticator({
+        AuthAdmin: AuthAdminModel,
+        AuthGroup: AuthGroupModel,
+        AuthResource: AuthResourceModel
+    })
 };
 
 const get = _name => {

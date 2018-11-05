@@ -2,20 +2,28 @@
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const CustomDbError = require('../../../helpers/CustomDbError');
-const EnvironmentVariables = require('../../../helpers/EnvironmentVariables');
-const ControllerEnumValidator = require('../../../helpers/ControllerEnumValidator');
+const CustomDbError = require('../../helpers/CustomDbError');
+const EnvironmentVariables = require('../../helpers/EnvironmentVariables');
+const ControllerEnumValidator = require('../../helpers/ControllerEnumValidator');
 
 const ENV_VARIABLE_JWT_SECRET = EnvironmentVariables.get('JWT_SECRET');
 
-class Admin {
+class Authenticator {
     constructor (_models) {
         this.models = _models;
         this.STATUS_INACTIVE = 0;
         this.STATUS_ACTIVE = 1;
+        this.TYPE_COMPANIES = 0;
+        this.TYPE_INVOICES = 1;
+        this.TYPE_MAILS = 2;
+        this.METHOD_GET = 1;
+        this.METHOD_POST = 2;
         this.ERROR_STATUS_INACTIVE = 'Inactive user!';
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
+        this.ERROR_STATUS_GROUP = 'Inactive group!';
         this.JWT_EXPIRES_IN = 28800;
+        this.typeEnumValidator = new ControllerEnumValidator(this, 'TYPE');
+        this.methodEnumValidator = new ControllerEnumValidator(this, 'METHOD');
         this.statusEnumValidator = new ControllerEnumValidator(this, 'STATUS');
     }
 
@@ -43,7 +51,7 @@ class Admin {
         });
     }
 
-    async addNew (_email, _password, _status) {
+    async addNewAdmin (_email, _password, _status) {
         const _salt = await this._createSalt();
         const _saltedAndHashedPassword = await this._saltAndHashPassword(_salt, _password);
 
@@ -61,14 +69,14 @@ class Admin {
             });
     }
 
-    async activate (_email) {
+    async activateAdmin (_email) {
         return this.models.AuthAdmin
             .query()
             .update({ status: this.STATUS_ACTIVE })
             .where('email', _email);
     }
 
-    async authenticateByEmailAndPassword (_email, _password) {
+    async authenticateAdminByEmailAndPassword (_email, _password) {
         const _admin = await this.models.AuthAdmin
             .query()
             .select('email', 'salt', 'password', 'status')
@@ -88,8 +96,8 @@ class Admin {
         };
     }
 
-    async createJWTToken (_email, _password) {
-        const _admin = await this.authenticateByEmailAndPassword(_email, _password);
+    async createJWTTokenForAdmin (_email, _password) {
+        const _admin = await this.authenticateAdminByEmailAndPassword(_email, _password);
 
         return new Promise((resolve, reject) => {
             jwt.sign(_admin, ENV_VARIABLE_JWT_SECRET, {
@@ -104,7 +112,7 @@ class Admin {
         });
     }
 
-    async authenticateByJWTToken (_token) {
+    async authenticateAdminByJWTToken (_token) {
         return new Promise((resolve, reject) => {
             jwt.verify(_token, ENV_VARIABLE_JWT_SECRET, (_error, _decoded) => {
                 if (_error) {
@@ -115,6 +123,38 @@ class Admin {
             });
         });
     }
+
+    async addNewGroup (_name, _status) {
+        return this.models.AuthGroup
+            .query()
+            .insert({
+                name: _name,
+                status: this.statusEnumValidator.validate(_status, true) || this.STATUS_INACTIVE
+            })
+            .catch(_error => {
+                throw new CustomDbError(_error.message);
+            });
+    }
+
+    async activateGroup (_name) {
+        return this.models.AuthGroup
+            .query()
+            .update({ status: this.STATUS_ACTIVE })
+            .where('name', _name);
+    }
+
+    async addNewResource (_type, _method, _status) {
+        return this.models.AuthResource
+            .query()
+            .insert({
+                type: this.typeEnumValidator.validate(_type),
+                method: this.methodEnumValidator.validate(_method),
+                status: this.statusEnumValidator.validate(_status, true) || this.STATUS_INACTIVE
+            })
+            .catch(_error => {
+                throw new CustomDbError(_error.message);
+            });
+    }
 }
 
-module.exports = Admin;
+module.exports = Authenticator;
