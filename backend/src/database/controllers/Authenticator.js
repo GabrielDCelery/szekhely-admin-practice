@@ -13,15 +13,17 @@ class Authenticator {
         this.models = _models;
         this.STATUS_INACTIVE = 0;
         this.STATUS_ACTIVE = 1;
+        this.STATUS_DISABLED = 2;
         this.TYPE_COMPANIES = 0;
         this.TYPE_INVOICES = 1;
         this.TYPE_MAILS = 2;
         this.METHOD_GET = 1;
         this.METHOD_POST = 2;
-        this.ERROR_STATUS_INACTIVE = 'Inactive user!';
+        this.ERROR_ACCOUNT_INACTIVE = 'Inactive user!';
+        this.ERROR_ACCOUNT_LOCKED = 'Sorry, this account has been locked!';
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
-        this.ERROR_STATUS_GROUP = 'Inactive group!';
         this.JWT_EXPIRES_IN = 28800;
+        this.MAX_FAILED_LOGIN_ATTEMPTS = 3;
         this.typeEnumValidator = new ControllerEnumValidator(this, 'TYPE');
         this.methodEnumValidator = new ControllerEnumValidator(this, 'METHOD');
         this.statusEnumValidator = new ControllerEnumValidator(this, 'STATUS');
@@ -79,21 +81,40 @@ class Authenticator {
     async authenticateAdminByEmailAndPassword (_email, _password) {
         const _admin = await this.models.AuthAdmin
             .query()
-            .select('email', 'salt', 'password', 'status')
+            .select('email', 'salt', 'password', 'num_of_failed_login_attempts', 'status')
             .where('email', _email)
             .first();
 
         if (_admin.status === this.STATUS_INACTIVE) {
-            throw new Error(this.ERROR_STATUS_INACTIVE);
+            throw new Error(this.ERROR_ACCOUNT_INACTIVE);
         }
 
-        if (await this._saltAndHashPassword(_admin.salt, _password) !== _admin.password) {
-            throw new Error(this.ERROR_PASSWORD_INVALID);
+        if (_admin.status === this.STATUS_DISABLED) {
+            throw new Error(this.ERROR_ACCOUNT_LOCKED);
         }
 
-        return {
-            email: _admin.email
-        };
+        if (await this._saltAndHashPassword(_admin.salt, _password) === _admin.password) {
+            return { email: _admin.email };
+        }
+
+        if ((_admin.num_of_failed_login_attempts + 1) === this.MAX_FAILED_LOGIN_ATTEMPTS) {
+            await this.models.AuthAdmin
+                .query()
+                .update({
+                    status: this.STATUS_DISABLED,
+                    num_of_failed_login_attempts: _admin.num_of_failed_login_attempts + 1
+                })
+                .where('email', _email);
+
+            throw new Error(this.ERROR_ACCOUNT_LOCKED);
+        }
+
+        await this.models.AuthAdmin
+            .query()
+            .update({ num_of_failed_login_attempts: _admin.num_of_failed_login_attempts + 1 })
+            .where('email', _email);
+
+        throw new Error(this.ERROR_PASSWORD_INVALID);
     }
 
     async createJWTTokenForAdmin (_email, _password) {

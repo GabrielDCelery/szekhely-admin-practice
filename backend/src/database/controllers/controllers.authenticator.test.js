@@ -155,7 +155,7 @@ describe('Authenticator controller', () => {
                 await controller.addNewAdmin(_email, 'somepassword');
                 await controller.authenticateAdminByEmailAndPassword(_email, 'somepassword');
             } catch (_error) {
-                return expect(_error.message).toEqual(controller.ERROR_STATUS_INACTIVE);
+                return expect(_error.message).toEqual(controller.ERROR_ACCOUNT_INACTIVE);
             }
 
             throw new Error('Expected test to throw!');
@@ -170,6 +170,42 @@ describe('Authenticator controller', () => {
                 await controller.authenticateAdminByEmailAndPassword(_email, 'wrongpassword');
             } catch (_error) {
                 return expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
+            }
+
+            throw new Error('Expected test to throw!');
+        });
+
+        test('disables account after too many failed login attempts', async () => {
+            const _email = createTestEmail();
+
+            await controller.addNewAdmin(_email, 'somepassword');
+            await controller.activateAdmin(_email);
+
+            for (let _i = 1, _iMax = controller.MAX_FAILED_LOGIN_ATTEMPTS; _i < _iMax; _i++) {
+                try {
+                    await controller.authenticateAdminByEmailAndPassword(_email, 'wrongpassword');
+                } catch (_error) {
+                    const _admin = await controller.models.AuthAdmin.query().where({ email: _email }).first();
+
+                    expect(_admin.num_of_failed_login_attempts).toEqual(_i);
+                    expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
+
+                    continue;
+                }
+
+                throw new Error('Expected test to throw!');
+            }
+
+            try {
+                await controller.authenticateAdminByEmailAndPassword(_email, 'wrongpassword');
+            } catch (_error) {
+                const _admin = await controller.models.AuthAdmin.query().where({ email: _email }).first();
+
+                expect(_admin.num_of_failed_login_attempts).toEqual(controller.MAX_FAILED_LOGIN_ATTEMPTS);
+                expect(_admin.status).toEqual(controller.STATUS_DISABLED);
+                expect(_error.message).toEqual(controller.ERROR_ACCOUNT_LOCKED);
+
+                return;
             }
 
             throw new Error('Expected test to throw!');
