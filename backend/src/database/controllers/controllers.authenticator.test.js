@@ -1,5 +1,6 @@
 'use strict';
 
+const _ = require('lodash');
 const controllers = require('./controllers');
 const isHex = require('is-hex');
 const randomstring = require('randomstring');
@@ -364,24 +365,44 @@ describe('Authenticator controller', () => {
 
     describe('associateAdminAndGroup (_adminEmail, _groupName)', () => {
         test('creates an association between an admin and a group', async () => {
-            const _email = createTestEmail();
-            const _name = createGroupName();
+            const [_emailA, _emailB, _emailC] = [createTestEmail(), createTestEmail(), createTestEmail()];
+            const [_groupNameA, _groupNameB, _groupNameC] = [createGroupName(), createGroupName(), createGroupName()];
 
-            const _admin = await controller.addNewAdmin(_email, 'somepassword');
-            const _group = await controller.addNewGroup(_name);
+            await controller.addNewAdmin(_emailA, 'somepassword');
+            await controller.addNewAdmin(_emailB, 'somepassword');
+            await controller.addNewAdmin(_emailC, 'somepassword');
 
-            await controller.associateAdminAndGroup(_email, _name);
-            /*
-            const _relation = await controller.models.AuthAdmin
-                .query()
-                .join('auth_groups', _join => {
-                    _join.on('auth_admins.id', '=', 'auth_admins_groups.admin_id').on('auth_groups.id', '=', 'auth_admins_groups.group_id');
-                })
-                .where('auth_admins.id', _admin.id)
-                .where('auth_groups.id', _group.id);
+            const _groupA = await controller.addNewGroup(_groupNameA);
+            const _groupB = await controller.addNewGroup(_groupNameB);
+            const _groupC = await controller.addNewGroup(_groupNameC);
 
-            console.log(_relation);
-            */
+            await controller.associateAdminAndGroup(_emailA, _groupNameA);
+            await controller.associateAdminAndGroup(_emailA, _groupNameB);
+            await controller.associateAdminAndGroup(_emailA, _groupNameC);
+            await controller.associateAdminAndGroup(_emailB, _groupNameB);
+            await controller.associateAdminAndGroup(_emailC, _groupNameB);
+            await controller.associateAdminAndGroup(_emailC, _groupNameC);
+
+            const _adminA = await controller.models.AuthAdmin.query().where({ email: _emailA }).eager('groups').first();
+            const _adminAGroups = _.map(_adminA.groups, _group => _group.id);
+
+            expect(_adminAGroups.length).toEqual(3);
+            expect(_.includes(_adminAGroups, _groupA.id)).toBeTruthy();
+            expect(_.includes(_adminAGroups, _groupB.id)).toBeTruthy();
+            expect(_.includes(_adminAGroups, _groupC.id)).toBeTruthy();
+
+            const _adminB = await controller.models.AuthAdmin.query().where({ email: _emailB }).eager('groups').first();
+            const _adminBGroups = _.map(_adminB.groups, _group => _group.id);
+
+            expect(_adminBGroups.length).toEqual(1);
+            expect(_.includes(_adminBGroups, _groupB.id)).toBeTruthy();
+
+            const _adminC = await controller.models.AuthAdmin.query().where({ email: _emailC }).eager('groups').first();
+            const _adminCGroups = _.map(_adminC.groups, _group => _group.id);
+
+            expect(_adminCGroups.length).toEqual(2);
+            expect(_.includes(_adminCGroups, _groupB.id)).toBeTruthy();
+            expect(_.includes(_adminCGroups, _groupC.id)).toBeTruthy();
         });
     });
 });
