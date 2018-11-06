@@ -14,9 +14,6 @@ class Authenticator {
         this.STATUS_INACTIVE = 0;
         this.STATUS_ACTIVE = 1;
         this.STATUS_DISABLED = 2;
-        this.RESOURCE_TYPE_COMPANIES = 0;
-        this.RESOURCE_TYPE_INVOICES = 1;
-        this.RESOURCE_TYPE_MAILS = 2;
         this.METHOD_GET = 1;
         this.METHOD_POST = 2;
         this.ERROR_ACCOUNT_INACTIVE = 'Inactive user!';
@@ -171,11 +168,11 @@ class Authenticator {
         return _admin.$relatedQuery('groups').relate(_group.id);
     }
 
-    async addNewResource (_type, _method, _status) {
+    async addNewResource (_name, _method, _status) {
         return this.models.AuthResource
             .query()
             .insert({
-                type: this.resourceTypeEnumValidator.validate(_type),
+                name: _name,
                 method: this.methodEnumValidator.validate(_method),
                 status: this.statusEnumValidator.validate(_status, true) || this.STATUS_INACTIVE
             })
@@ -184,12 +181,12 @@ class Authenticator {
             });
     }
 
-    async changeResourceStatus (_type, _method, _status) {
+    async changeResourceStatus (_name, _method, _status) {
         return this.models.AuthResource
             .query()
             .update({ status: this.statusEnumValidator.validate(_status) })
             .where({
-                type: this.resourceTypeEnumValidator.validate(_type),
+                name: _name,
                 method: this.methodEnumValidator.validate(_method)
             });
     }

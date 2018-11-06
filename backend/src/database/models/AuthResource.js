@@ -21,7 +21,7 @@ class AuthResource extends Model {
             */
             properties: {
                 id: { type: 'string' },
-                type: { type: 'integer' },
+                name: { type: 'string' },
                 method: { type: 'integer' },
                 status: { type: 'integer' }
             }

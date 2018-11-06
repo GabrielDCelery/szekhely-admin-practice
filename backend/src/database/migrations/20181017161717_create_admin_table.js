@@ -22,11 +22,11 @@ exports.up = _knex => {
 
         await _knex.schema.createTable('auth_resources', _table => {
             _table.uuid('id').primary();
-            _table.integer('type');
+            _table.string('name');
             _table.integer('method');
             _table.integer('status');
             _table.timestamps();
-            _table.unique(['type', 'method']);
+            _table.unique(['name', 'method']);
         });
 
         await _knex.schema.createTable('auth_admins_password_activation', _table => {

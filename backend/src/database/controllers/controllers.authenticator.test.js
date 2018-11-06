@@ -4,13 +4,15 @@ const _ = require('lodash');
 const controllers = require('./controllers');
 const isHex = require('is-hex');
 const randomstring = require('randomstring');
-const CustomDbError = require('../../helpers/CustomDbError');
+const CustomDbError = require('../helpers/CustomDbError');
+
+const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
 
 const createTestEmail = () => {
     return `${randomstring.generate(16)}@gmail.com`;
 };
 
-const createGroupName = () => {
+const createTestName = () => {
     return randomstring.generate(16);
 };
 
@@ -38,7 +40,6 @@ describe('Authenticator controller', () => {
 
     describe('addNewAdmin (_email, _password, _status)', () => {
         test('adds a new administrator', async () => {
-            const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
             const _email = createTestEmail();
             const _admin = await controller.addNewAdmin(_email, 'somepassword');
 
@@ -255,8 +256,7 @@ describe('Authenticator controller', () => {
 
     describe('addNewGroup (_name)', () => {
         test('adds a new administrative group', async () => {
-            const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-            const _name = createGroupName();
+            const _name = createTestName();
             const _group = await controller.addNewGroup(_name);
 
             expect(REG_EXP_UUID.test(_group.id)).toBeTruthy();
@@ -264,15 +264,14 @@ describe('Authenticator controller', () => {
         });
 
         test('sets the new group to inactive by default', async () => {
-            const _name = createGroupName();
-            const _group = await controller.addNewGroup(_name);
+            const _group = await controller.addNewGroup(createTestName());
 
             expect(_group.status).toEqual(controller.STATUS_INACTIVE);
         });
 
         test('throws an error if the group is already registered', async () => {
             try {
-                const _name = createGroupName();
+                const _name = createTestName();
 
                 await controller.addNewGroup(_name);
                 await controller.addNewGroup(_name);
@@ -284,7 +283,7 @@ describe('Authenticator controller', () => {
         });
 
         test('sets the group to active if the "_status" flag is set to active', async () => {
-            const _name = createGroupName();
+            const _name = createTestName();
             const _group = await controller.addNewGroup(_name, controller.STATUS_ACTIVE);
 
             expect(_group.name).toEqual(_name);
@@ -294,7 +293,7 @@ describe('Authenticator controller', () => {
 
     describe('changeGroupStatus (_name, _status)', () => {
         test('changes the status of a group', async () => {
-            const _name = createGroupName();
+            const _name = createTestName();
 
             await controller.addNewGroup(_name, 'somepassword');
             await controller.changeGroupStatus(_name, controller.STATUS_ACTIVE);
@@ -306,7 +305,7 @@ describe('Authenticator controller', () => {
         });
 
         test('does not change the status of other groups', async () => {
-            const _name = createGroupName();
+            const _name = createTestName();
 
             await controller.addNewGroup(_name);
 
@@ -314,80 +313,73 @@ describe('Authenticator controller', () => {
         });
     });
 
-    describe('addNewResource (_type, _method, _status)', () => {
+    describe('addNewResource (_name, _method, _status)', () => {
         test('adds a new resource', async () => {
-            const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+            const _name = createTestName();
+            const _resource = await controller.addNewResource(_name, controller.METHOD_GET);
 
             expect(REG_EXP_UUID.test(_resource.id)).toBeTruthy();
-            expect(_resource.type).toEqual(controller.RESOURCE_TYPE_COMPANIES);
+            expect(_resource.name).toEqual(_name);
             expect(_resource.method).toEqual(controller.METHOD_GET);
-
-            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('sets the new resource to inactive by default', async () => {
-            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+            const _resource = await controller.addNewResource(createTestName(), controller.METHOD_GET);
 
             expect(_resource.status).toEqual(controller.STATUS_INACTIVE);
-
-            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('sets the resource to active if the "_status" flag is set to active', async () => {
-            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            const _resource = await controller.addNewResource(createTestName(), controller.METHOD_GET, controller.STATUS_ACTIVE);
 
             expect(_resource.status).toEqual(controller.STATUS_ACTIVE);
-
-            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('throws an error if the resource is already registered', async () => {
-            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+            const _name = createTestName();
 
             try {
-                await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+                await controller.addNewResource(_name, controller.METHOD_GET);
+                await controller.addNewResource(_name, controller.METHOD_GET);
             } catch (_error) {
-                expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
-
-                return controller.models.AuthResource.query().delete().where({ id: _resource.id });
+                return expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
             }
 
             throw new Error('Expected test to throw!');
         });
     });
 
-    describe('changeResourceStatus (_type, _method, _status)', () => {
+    describe('changeResourceStatus (_name, _method, _status)', () => {
         test('changes the status of a resource', async () => {
-            await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
-            await controller.changeResourceStatus(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            const _name = createTestName();
+
+            await controller.addNewResource(_name, controller.METHOD_GET);
+            await controller.changeResourceStatus(_name, controller.METHOD_GET, controller.STATUS_ACTIVE);
 
             const _resource = await controller.models.AuthResource
                 .query()
                 .where({
-                    type: controller.RESOURCE_TYPE_COMPANIES,
+                    name: _name,
                     method: controller.METHOD_GET
                 })
                 .first();
 
             expect(_resource.status).toEqual(controller.STATUS_ACTIVE);
-
-            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('does not change the status of other resources', async () => {
-            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+            const _name = createTestName();
 
-            expect(await controller.changeResourceStatus(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE)).toEqual(1);
+            await controller.addNewResource(_name, controller.METHOD_GET);
 
-            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
+            expect(await controller.changeResourceStatus(_name, controller.METHOD_GET, controller.STATUS_ACTIVE)).toEqual(1);
         });
     });
 
     describe('associateAdminAndGroup (_adminEmail, _groupName)', () => {
         test('creates an association between an admin and a group', async () => {
             const [_emailA, _emailB, _emailC] = [createTestEmail(), createTestEmail(), createTestEmail()];
-            const [_groupNameA, _groupNameB, _groupNameC] = [createGroupName(), createGroupName(), createGroupName()];
+            const [_groupNameA, _groupNameB, _groupNameC] = [createTestName(), createTestName(), createTestName()];
 
             await controller.addNewAdmin(_emailA, 'somepassword');
             await controller.addNewAdmin(_emailB, 'somepassword');
