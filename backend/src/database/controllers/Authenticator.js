@@ -14,9 +14,9 @@ class Authenticator {
         this.STATUS_INACTIVE = 0;
         this.STATUS_ACTIVE = 1;
         this.STATUS_DISABLED = 2;
-        this.TYPE_COMPANIES = 0;
-        this.TYPE_INVOICES = 1;
-        this.TYPE_MAILS = 2;
+        this.RESOURCE_TYPE_COMPANIES = 0;
+        this.RESOURCE_TYPE_INVOICES = 1;
+        this.RESOURCE_TYPE_MAILS = 2;
         this.METHOD_GET = 1;
         this.METHOD_POST = 2;
         this.ERROR_ACCOUNT_INACTIVE = 'Inactive user!';
@@ -24,7 +24,7 @@ class Authenticator {
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
         this.JWT_EXPIRES_IN = 28800;
         this.MAX_FAILED_LOGIN_ATTEMPTS = 3;
-        this.typeEnumValidator = new ControllerEnumValidator(this, 'TYPE');
+        this.resourceTypeEnumValidator = new ControllerEnumValidator(this, 'TYPE');
         this.methodEnumValidator = new ControllerEnumValidator(this, 'METHOD');
         this.statusEnumValidator = new ControllerEnumValidator(this, 'STATUS');
     }
@@ -175,7 +175,7 @@ class Authenticator {
         return this.models.AuthResource
             .query()
             .insert({
-                type: this.typeEnumValidator.validate(_type),
+                type: this.resourceTypeEnumValidator.validate(_type),
                 method: this.methodEnumValidator.validate(_method),
                 status: this.statusEnumValidator.validate(_status, true) || this.STATUS_INACTIVE
             })
@@ -189,7 +189,7 @@ class Authenticator {
             .query()
             .update({ status: this.statusEnumValidator.validate(_status) })
             .where({
-                type: this.typeEnumValidator.validate(_type),
+                type: this.resourceTypeEnumValidator.validate(_type),
                 method: this.methodEnumValidator.validate(_method)
             });
     }

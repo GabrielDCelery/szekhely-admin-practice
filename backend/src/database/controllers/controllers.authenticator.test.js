@@ -317,17 +317,17 @@ describe('Authenticator controller', () => {
     describe('addNewResource (_type, _method, _status)', () => {
         test('adds a new resource', async () => {
             const REG_EXP_UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/;
-            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
 
             expect(REG_EXP_UUID.test(_resource.id)).toBeTruthy();
-            expect(_resource.type).toEqual(controller.TYPE_COMPANIES);
+            expect(_resource.type).toEqual(controller.RESOURCE_TYPE_COMPANIES);
             expect(_resource.method).toEqual(controller.METHOD_GET);
 
             await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('sets the new resource to inactive by default', async () => {
-            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
 
             expect(_resource.status).toEqual(controller.STATUS_INACTIVE);
 
@@ -335,7 +335,7 @@ describe('Authenticator controller', () => {
         });
 
         test('sets the resource to active if the "_status" flag is set to active', async () => {
-            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
 
             expect(_resource.status).toEqual(controller.STATUS_ACTIVE);
 
@@ -343,10 +343,10 @@ describe('Authenticator controller', () => {
         });
 
         test('throws an error if the resource is already registered', async () => {
-            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
 
             try {
-                await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+                await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
             } catch (_error) {
                 expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
 
@@ -359,13 +359,13 @@ describe('Authenticator controller', () => {
 
     describe('changeResourceStatus (_type, _method, _status)', () => {
         test('changes the status of a resource', async () => {
-            await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
-            await controller.changeResourceStatus(controller.TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
+            await controller.changeResourceStatus(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
 
             const _resource = await controller.models.AuthResource
                 .query()
                 .where({
-                    type: controller.TYPE_COMPANIES,
+                    type: controller.RESOURCE_TYPE_COMPANIES,
                     method: controller.METHOD_GET
                 })
                 .first();
@@ -376,9 +376,9 @@ describe('Authenticator controller', () => {
         });
 
         test('does not change the status of other resources', async () => {
-            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+            const _resource = await controller.addNewResource(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET);
 
-            expect(await controller.changeResourceStatus(controller.TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE)).toEqual(1);
+            expect(await controller.changeResourceStatus(controller.RESOURCE_TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE)).toEqual(1);
 
             await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
