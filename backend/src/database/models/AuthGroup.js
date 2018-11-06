@@ -25,6 +25,7 @@ class AuthGroup extends Model {
 
     static get relationMappings () {
         const Admin = require('./AuthAdmin');
+        const Resource = require('./AuthResource');
 
         return {
             admins: {
@@ -35,6 +36,18 @@ class AuthGroup extends Model {
                     through: {
                         from: 'auth_admins_groups.admin_id',
                         to: 'auth_admins_groups.group_id'
+                    },
+                    to: 'auth_groups.id'
+                }
+            },
+            groups: {
+                relation: Model.ManyToManyRelation,
+                modelClass: Resource,
+                join: {
+                    from: 'auth_resources.id',
+                    through: {
+                        from: 'auth_resources_groups.resource_id',
+                        to: 'auth_resources_groups.group_id'
                     },
                     to: 'auth_groups.id'
                 }

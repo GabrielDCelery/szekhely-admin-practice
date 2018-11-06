@@ -378,31 +378,65 @@ describe('Authenticator controller', () => {
 
     describe('associateAdminAndGroup (_adminEmail, _groupName)', () => {
         test('creates an association between an admin and a group', async () => {
-            const [_emailA, _emailB, _emailC] = [createTestEmail(), createTestEmail(), createTestEmail()];
+            const _emails = _.times(3, createTestEmail);
+            const _groupNames = _.times(3, createTestName);
+
+            await Promise.all(_emails.map(_email => controller.addNewAdmin(_email, 'somepassword')));
+
+            const _groups = await Promise.all(_groupNames.map(_name => controller.addNewGroup(_name)));
+
+            await controller.associateAdminAndGroup(_emails[0], _groupNames[0]);
+            await controller.associateAdminAndGroup(_emails[0], _groupNames[1]);
+            await controller.associateAdminAndGroup(_emails[0], _groupNames[2]);
+            await controller.associateAdminAndGroup(_emails[1], _groupNames[1]);
+            await controller.associateAdminAndGroup(_emails[1], _groupNames[2]);
+            await controller.associateAdminAndGroup(_emails[2], _groupNames[2]);
+
+            const _admins = await Promise.all(_emails.map(_email => controller.models.AuthAdmin.query().where({ email: _email }).eager('groups').first()));
+            const _adminGroups = _admins.map(_admin => _admin.groups.map(_group => _group.id));
+
+            expect(_adminGroups[0].length).toEqual(3);
+            expect(_adminGroups[1].length).toEqual(2);
+            expect(_adminGroups[2].length).toEqual(1);
+
+            expect(_.includes(_adminGroups[0], _groups[0].id)).toBeTruthy();
+            expect(_.includes(_adminGroups[0], _groups[1].id)).toBeTruthy();
+            expect(_.includes(_adminGroups[0], _groups[2].id)).toBeTruthy();
+
+            expect(_.includes(_adminGroups[1], _groups[1].id)).toBeTruthy();
+            expect(_.includes(_adminGroups[1], _groups[2].id)).toBeTruthy();
+
+            expect(_.includes(_adminGroups[2], _groups[2].id)).toBeTruthy();
+        });
+    });
+/*
+    describe('associateGroupAndResource (_groupName, _resourceName)', () => {
+        test('creates an association between an admin and a group', async () => {
             const [_groupNameA, _groupNameB, _groupNameC] = [createTestName(), createTestName(), createTestName()];
+            const [_resourceNameA, _resourceNameB, _resourceNameC] = [createTestName(), createTestName(), createTestName()];
 
-            await controller.addNewAdmin(_emailA, 'somepassword');
-            await controller.addNewAdmin(_emailB, 'somepassword');
-            await controller.addNewAdmin(_emailC, 'somepassword');
+            await controller.addNewGroup(_groupNameA);
+            await controller.addNewGroup(_groupNameB);
+            await controller.addNewGroup(_groupNameC);
 
-            const _groupA = await controller.addNewGroup(_groupNameA);
-            const _groupB = await controller.addNewGroup(_groupNameB);
-            const _groupC = await controller.addNewGroup(_groupNameC);
+            const _resourceA = await controller.addNewResource(_resourceNameA);
+            const _resourceB = await controller.addNewResource(_resourceNameB);
+            const _resourceC = await controller.addNewResource(_resourceNameC);
 
-            await controller.associateAdminAndGroup(_emailA, _groupNameA);
-            await controller.associateAdminAndGroup(_emailA, _groupNameB);
-            await controller.associateAdminAndGroup(_emailA, _groupNameC);
-            await controller.associateAdminAndGroup(_emailB, _groupNameB);
-            await controller.associateAdminAndGroup(_emailC, _groupNameB);
-            await controller.associateAdminAndGroup(_emailC, _groupNameC);
+            await controller.associateGroupAndResource(_groupNameA, _resourceNameA);
+            await controller.associateGroupAndResource(_groupNameA, _resourceNameB);
+            await controller.associateGroupAndResource(_groupNameA, _resourceNameC);
+            await controller.associateGroupAndResource(_groupNameB, _resourceNameB);
+            await controller.associateGroupAndResource(_groupNameC, _resourceNameB);
+            await controller.associateGroupAndResource(_groupNameC, _resourceNameC);
 
-            const _adminA = await controller.models.AuthAdmin.query().where({ email: _emailA }).eager('groups').first();
-            const _adminAGroups = _.map(_adminA.groups, _group => _group.id);
+            const _groupA = await controller.models.AuthGroup.query().where({ name: _groupNameA }).eager('resources').first();
+            const _groupAResources = _.map(_groupA.groups, _group => _group.id);
 
-            expect(_adminAGroups.length).toEqual(3);
-            expect(_.includes(_adminAGroups, _groupA.id)).toBeTruthy();
-            expect(_.includes(_adminAGroups, _groupB.id)).toBeTruthy();
-            expect(_.includes(_adminAGroups, _groupC.id)).toBeTruthy();
+            expect(_groupAResources.length).toEqual(3);
+            expect(_.includes(_groupAResources, _resourceA.id)).toBeTruthy();
+            expect(_.includes(_groupAResources, _resourceB.id)).toBeTruthy();
+            expect(_.includes(_groupAResources, _resourceC.id)).toBeTruthy();
 
             const _adminB = await controller.models.AuthAdmin.query().where({ email: _emailB }).eager('groups').first();
             const _adminBGroups = _.map(_adminB.groups, _group => _group.id);
@@ -418,4 +452,5 @@ describe('Authenticator controller', () => {
             expect(_.includes(_adminCGroups, _groupC.id)).toBeTruthy();
         });
     });
+    */
 });

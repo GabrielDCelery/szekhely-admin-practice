@@ -28,6 +28,25 @@ class AuthResource extends Model {
         };
     }
 
+    static get relationMappings () {
+        const Group = require('./AuthGroup');
+
+        return {
+            groups: {
+                relation: Model.ManyToManyRelation,
+                modelClass: Group,
+                join: {
+                    from: 'auth_resources.id',
+                    through: {
+                        from: 'auth_resources_groups.resource_id',
+                        to: 'auth_resources_groups.group_id'
+                    },
+                    to: 'auth_groups.id'
+                }
+            }
+        };
+    }
+
     $beforeInsert () {
         const _date = new Date().toISOString();
 

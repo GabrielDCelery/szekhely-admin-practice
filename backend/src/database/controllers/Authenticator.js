@@ -190,6 +190,13 @@ class Authenticator {
                 method: this.methodEnumValidator.validate(_method)
             });
     }
+
+    async associateGroupAndResource (_groupName, _resouceName) {
+        const _group = await this.models.AuthGroup.query().findOne({ name: _groupName });
+        const _resource = await this.models.AuthResource.query().findOne({ name: _resouceName });
+
+        return _group.$relatedQuery('resources').relate(_resource.id);
+    }
 }
 
 module.exports = Authenticator;
