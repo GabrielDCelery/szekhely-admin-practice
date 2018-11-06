@@ -71,10 +71,10 @@ class Authenticator {
             });
     }
 
-    async activateAdmin (_email) {
+    async changeAdminStatus (_email, _status) {
         return this.models.AuthAdmin
             .query()
-            .update({ status: this.STATUS_ACTIVE })
+            .update({ status: this.statusEnumValidator.validate(_status) })
             .where('email', _email);
     }
 
@@ -157,10 +157,10 @@ class Authenticator {
             });
     }
 
-    async activateGroup (_name) {
+    async changeGroupStatus (_name, _status) {
         return this.models.AuthGroup
             .query()
-            .update({ status: this.STATUS_ACTIVE })
+            .update({ status: this.statusEnumValidator.validate(_status) })
             .where('name', _name);
     }
 
@@ -181,6 +181,16 @@ class Authenticator {
             })
             .catch(_error => {
                 throw new CustomDbError(_error.message);
+            });
+    }
+
+    async changeResourceStatus (_type, _method, _status) {
+        return this.models.AuthResource
+            .query()
+            .update({ status: this.statusEnumValidator.validate(_status) })
+            .where({
+                type: this.typeEnumValidator.validate(_type),
+                method: this.methodEnumValidator.validate(_method)
             });
     }
 }

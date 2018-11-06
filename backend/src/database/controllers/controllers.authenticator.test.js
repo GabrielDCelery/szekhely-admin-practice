@@ -115,12 +115,12 @@ describe('Authenticator controller', () => {
         });
     });
 
-    describe('activateAdmin (_email)', () => {
-        test('activates an administrator', async () => {
+    describe('changeAdminStatus (_email, _status)', () => {
+        test('changes the status of an administrator', async () => {
             const _email = createTestEmail();
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
 
             const _admin = await controller.models.AuthAdmin.query().where({ email: _email }).first();
 
@@ -133,7 +133,7 @@ describe('Authenticator controller', () => {
 
             await controller.addNewAdmin(_email, 'somepassword');
 
-            expect(await controller.activateAdmin(_email)).toEqual(1);
+            expect(await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE)).toEqual(1);
         });
     });
 
@@ -142,7 +142,7 @@ describe('Authenticator controller', () => {
             const _email = createTestEmail();
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
 
             const _admin = await controller.authenticateAdminByEmailAndPassword(_email, 'somepassword');
 
@@ -167,7 +167,7 @@ describe('Authenticator controller', () => {
                 const _email = createTestEmail();
 
                 await controller.addNewAdmin(_email, 'somepassword');
-                await controller.activateAdmin(_email);
+                await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
                 await controller.authenticateAdminByEmailAndPassword(_email, 'wrongpassword');
             } catch (_error) {
                 return expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
@@ -180,7 +180,7 @@ describe('Authenticator controller', () => {
             const _email = createTestEmail();
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
 
             for (let _i = 1, _iMax = controller.MAX_FAILED_LOGIN_ATTEMPTS; _i < _iMax; _i++) {
                 try {
@@ -219,7 +219,7 @@ describe('Authenticator controller', () => {
             const _email = createTestEmail();
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
 
             const _token = await controller.createJWTTokenForAdmin(_email, 'somepassword');
 
@@ -231,7 +231,7 @@ describe('Authenticator controller', () => {
             const _spyAuthenticateByEmailAndPassword = jest.spyOn(controller, 'authenticateAdminByEmailAndPassword');
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
             await controller.createJWTTokenForAdmin(_email, 'somepassword');
 
             expect(_spyAuthenticateByEmailAndPassword).toHaveBeenCalledTimes(1);
@@ -244,7 +244,7 @@ describe('Authenticator controller', () => {
             const _email = createTestEmail();
 
             await controller.addNewAdmin(_email, 'somepassword');
-            await controller.activateAdmin(_email);
+            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
 
             const _token = await controller.createJWTTokenForAdmin(_email, 'somepassword');
             const _decoded = await controller.authenticateAdminByJWTToken(_token);
@@ -292,12 +292,12 @@ describe('Authenticator controller', () => {
         });
     });
 
-    describe('activateGroup (_name)', () => {
-        test('activates an administrative user', async () => {
+    describe('changeGroupStatus (_name, _status)', () => {
+        test('changes the status of a group', async () => {
             const _name = createGroupName();
 
             await controller.addNewGroup(_name, 'somepassword');
-            await controller.activateGroup(_name);
+            await controller.changeGroupStatus(_name, controller.STATUS_ACTIVE);
 
             const _admin = await controller.models.AuthGroup.query().where({ name: _name }).first();
 
@@ -305,12 +305,12 @@ describe('Authenticator controller', () => {
             expect(_admin.status).toEqual(controller.STATUS_ACTIVE);
         });
 
-        test('does not change the status of other users', async () => {
+        test('does not change the status of other groups', async () => {
             const _name = createGroupName();
 
             await controller.addNewGroup(_name);
 
-            expect(await controller.activateGroup(_name)).toEqual(1);
+            expect(await controller.changeGroupStatus(_name, controller.STATUS_ACTIVE)).toEqual(1);
         });
     });
 
@@ -323,10 +323,7 @@ describe('Authenticator controller', () => {
             expect(_resource.type).toEqual(controller.TYPE_COMPANIES);
             expect(_resource.method).toEqual(controller.METHOD_GET);
 
-            await controller.models.AuthResource
-                .query()
-                .delete()
-                .where({ id: _resource.id });
+            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('sets the new resource to inactive by default', async () => {
@@ -334,10 +331,7 @@ describe('Authenticator controller', () => {
 
             expect(_resource.status).toEqual(controller.STATUS_INACTIVE);
 
-            await controller.models.AuthResource
-                .query()
-                .delete()
-                .where({ id: _resource.id });
+            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('sets the resource to active if the "_status" flag is set to active', async () => {
@@ -345,21 +339,48 @@ describe('Authenticator controller', () => {
 
             expect(_resource.status).toEqual(controller.STATUS_ACTIVE);
 
-            await controller.models.AuthResource
-                .query()
-                .delete()
-                .where({ id: _resource.id });
+            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
 
         test('throws an error if the resource is already registered', async () => {
+            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+
             try {
                 await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
-                await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
             } catch (_error) {
-                return expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
+                expect(_error.message).toEqual(CustomDbError.ERROR_DUPLICATE_RECORD);
+
+                return controller.models.AuthResource.query().delete().where({ id: _resource.id });
             }
 
             throw new Error('Expected test to throw!');
+        });
+    });
+
+    describe('changeResourceStatus (_type, _method, _status)', () => {
+        test('changes the status of a resource', async () => {
+            await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+            await controller.changeResourceStatus(controller.TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE);
+
+            const _resource = await controller.models.AuthResource
+                .query()
+                .where({
+                    type: controller.TYPE_COMPANIES,
+                    method: controller.METHOD_GET
+                })
+                .first();
+
+            expect(_resource.status).toEqual(controller.STATUS_ACTIVE);
+
+            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
+        });
+
+        test('does not change the status of other resources', async () => {
+            const _resource = await controller.addNewResource(controller.TYPE_COMPANIES, controller.METHOD_GET);
+
+            expect(await controller.changeResourceStatus(controller.TYPE_COMPANIES, controller.METHOD_GET, controller.STATUS_ACTIVE)).toEqual(1);
+
+            await controller.models.AuthResource.query().delete().where({ id: _resource.id });
         });
     });
 
