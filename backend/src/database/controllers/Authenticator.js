@@ -2,9 +2,9 @@
 
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const CustomDbError = require('../../helpers/CustomDbError');
+const CustomDbError = require('../helpers/CustomDbError');
 const EnvironmentVariables = require('../../helpers/EnvironmentVariables');
-const ControllerEnumValidator = require('../../helpers/ControllerEnumValidator');
+const ControllerEnumValidator = require('../helpers/ControllerEnumValidator');
 
 const ENV_VARIABLE_JWT_SECRET = EnvironmentVariables.get('JWT_SECRET');
 
