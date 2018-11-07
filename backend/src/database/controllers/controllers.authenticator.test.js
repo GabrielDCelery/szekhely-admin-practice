@@ -455,8 +455,21 @@ describe('Authenticator controller', () => {
             expect(_bDoesHaveAccess).toEqual(true);
         });
 
-        test('throws an error if cannot find resource association', () => {
+        test('throws an error if cannot find resource association', async () => {
+            const _groupName = createTestName();
+            const _resourceName = createTestName();
 
+            await controller.addNewGroup(_groupName, controller.STATUS_ACTIVE);
+            await controller.addNewResource(_resourceName, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            await controller.associateResourceAndGroup(_resourceName, _groupName);
+
+            try {
+                await controller.doesAdminHaveAccessToResource('emailthatdoesntexist@test.com', _resourceName, controller.METHOD_GET);
+            } catch (_error) {
+                return expect(_error.message).toEqual(controller.ERROR_ADMIN_RESOURCE_DOES_NOT_EXIST);
+            }
+
+            throw new Error('Expected test to throw!');
         });
     });
 });

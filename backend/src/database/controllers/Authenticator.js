@@ -211,7 +211,11 @@ class Authenticator {
             .where('resourceName', '=', _resourceName)
             .where('resourceMethod', this.methodEnumValidator.validate(_resourceMethod));
 
-        return _resourceAssociations.length !== 0;
+        if (_resourceAssociations.length === 0) {
+            throw new Error(this.ERROR_ADMIN_RESOURCE_DOES_NOT_EXIST);
+        }
+
+        return true;
     }
 }
 
