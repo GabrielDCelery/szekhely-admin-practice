@@ -191,11 +191,11 @@ class Authenticator {
             });
     }
 
-    async associateGroupAndResource (_groupName, _resouceName) {
+    async associateResourceAndGroup (_resourceName, _groupName) {
+        const _resource = await this.models.AuthResource.query().findOne({ name: _resourceName });
         const _group = await this.models.AuthGroup.query().findOne({ name: _groupName });
-        const _resource = await this.models.AuthResource.query().findOne({ name: _resouceName });
 
-        return _group.$relatedQuery('resources').relate(_resource.id);
+        return _resource.$relatedQuery('groups').relate(_group.id);
     }
 }
 

@@ -40,7 +40,7 @@ class AuthGroup extends Model {
                     to: 'auth_groups.id'
                 }
             },
-            groups: {
+            resources: {
                 relation: Model.ManyToManyRelation,
                 modelClass: Resource,
                 join: {
