@@ -19,6 +19,7 @@ class Authenticator {
         this.ERROR_ACCOUNT_INACTIVE = 'Inactive user!';
         this.ERROR_ACCOUNT_LOCKED = 'Sorry, this account has been locked!';
         this.ERROR_PASSWORD_INVALID = 'Invalid password!';
+        this.ERROR_ADMIN_RESOURCE_DOES_NOT_EXIST = 'Sorry, could not find valid resource for this admin!';
         this.JWT_EXPIRES_IN = 28800;
         this.MAX_FAILED_LOGIN_ATTEMPTS = 3;
         this.resourceTypeEnumValidator = new ControllerEnumValidator(this, 'TYPE');
@@ -196,6 +197,21 @@ class Authenticator {
         const _group = await this.models.AuthGroup.query().findOne({ name: _groupName });
 
         return _resource.$relatedQuery('groups').relate(_group.id);
+    }
+
+    async doesAdminHaveAccessToResource (_email, _resourceName, _resourceMethod) {
+        const _resourceAssociations = await this.models.AuthAdmin
+            .query()
+            .join('auth_admins_groups', 'auth_admins.id', 'auth_admins_groups.admin_id')
+            .join('auth_groups', 'auth_admins_groups.group_id', 'auth_groups.id')
+            .join('auth_resources_groups', 'auth_resources_groups.group_id', 'auth_groups.id')
+            .join('auth_resources', 'auth_resources_groups.resource_id', 'auth_resources.id')
+            .select('auth_admins.email', 'auth_resources.name as resourceName', 'auth_resources.method as resourceMethod')
+            .where('email', '=', _email)
+            .where('resourceName', '=', _resourceName)
+            .where('resourceMethod', this.methodEnumValidator.validate(_resourceMethod));
+
+        return _resourceAssociations.length !== 0;
     }
 }
 

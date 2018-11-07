@@ -142,8 +142,7 @@ describe('Authenticator controller', () => {
         test('authenticates administrator', async () => {
             const _email = createTestEmail();
 
-            await controller.addNewAdmin(_email, 'somepassword');
-            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
 
             const _admin = await controller.authenticateAdminByEmailAndPassword(_email, 'somepassword');
 
@@ -167,8 +166,7 @@ describe('Authenticator controller', () => {
             try {
                 const _email = createTestEmail();
 
-                await controller.addNewAdmin(_email, 'somepassword');
-                await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+                await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
                 await controller.authenticateAdminByEmailAndPassword(_email, 'wrongpassword');
             } catch (_error) {
                 return expect(_error.message).toEqual(controller.ERROR_PASSWORD_INVALID);
@@ -180,8 +178,7 @@ describe('Authenticator controller', () => {
         test('disables account after too many failed login attempts', async () => {
             const _email = createTestEmail();
 
-            await controller.addNewAdmin(_email, 'somepassword');
-            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
 
             for (let _i = 1, _iMax = controller.MAX_FAILED_LOGIN_ATTEMPTS; _i < _iMax; _i++) {
                 try {
@@ -219,8 +216,7 @@ describe('Authenticator controller', () => {
             const REG_EXP_JWT = /^[a-zA-Z0-9\-_]+?\.[a-zA-Z0-9\-_]+?\.([a-zA-Z0-9\-_]+)?$/;
             const _email = createTestEmail();
 
-            await controller.addNewAdmin(_email, 'somepassword');
-            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
 
             const _token = await controller.createJWTTokenForAdmin(_email, 'somepassword');
 
@@ -231,8 +227,7 @@ describe('Authenticator controller', () => {
             const _email = createTestEmail();
             const _spyAuthenticateByEmailAndPassword = jest.spyOn(controller, 'authenticateAdminByEmailAndPassword');
 
-            await controller.addNewAdmin(_email, 'somepassword');
-            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
             await controller.createJWTTokenForAdmin(_email, 'somepassword');
 
             expect(_spyAuthenticateByEmailAndPassword).toHaveBeenCalledTimes(1);
@@ -244,8 +239,7 @@ describe('Authenticator controller', () => {
         test('validates a jwt token issed by the system', async () => {
             const _email = createTestEmail();
 
-            await controller.addNewAdmin(_email, 'somepassword');
-            await controller.changeAdminStatus(_email, controller.STATUS_ACTIVE);
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
 
             const _token = await controller.createJWTTokenForAdmin(_email, 'somepassword');
             const _decoded = await controller.authenticateAdminByJWTToken(_token);
@@ -441,6 +435,28 @@ describe('Authenticator controller', () => {
             expect(_.includes(_resourceGroups[1], _groups[2].id)).toBeTruthy();
 
             expect(_.includes(_resourceGroups[2], _groups[2].id)).toBeTruthy();
+        });
+    });
+
+    describe('doesAdminHaveAccessToResource (_email, _resourceName, _resourceMethod)', () => {
+        test('checks if admin has access to resource', async () => {
+            const _email = createTestEmail();
+            const _groupName = createTestName();
+            const _resourceName = createTestName();
+
+            await controller.addNewAdmin(_email, 'somepassword', controller.STATUS_ACTIVE);
+            await controller.addNewGroup(_groupName, controller.STATUS_ACTIVE);
+            await controller.addNewResource(_resourceName, controller.METHOD_GET, controller.STATUS_ACTIVE);
+            await controller.associateAdminAndGroup(_email, _groupName);
+            await controller.associateResourceAndGroup(_resourceName, _groupName);
+
+            const _bDoesHaveAccess = await controller.doesAdminHaveAccessToResource(_email, _resourceName, controller.METHOD_GET);
+
+            expect(_bDoesHaveAccess).toEqual(true);
+        });
+
+        test('throws an error if cannot find resource association', () => {
+
         });
     });
 });
