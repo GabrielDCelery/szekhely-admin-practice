@@ -2,7 +2,7 @@
 
 const { Model } = require('objection');
 
-class AuthAdmin extends Model {
+class AuthAdminPasswordActivation extends Model {
     static get tableName () {
         return 'auth_admins_password_activation';
     }
@@ -37,4 +37,4 @@ class AuthAdmin extends Model {
     }
 }
 
-module.exports = AuthAdmin;
+module.exports = AuthAdminPasswordActivation;

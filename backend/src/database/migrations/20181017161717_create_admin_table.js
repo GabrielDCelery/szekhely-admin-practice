@@ -48,6 +48,66 @@ exports.up = _knex => {
             _table.uuid('group_id').references('id').inTable('auth_groups').onDelete('CASCADE');
             _table.unique(['resource_id', 'group_id']);
         });
+
+        await _knex.schema.createTable('emails', _table => {
+            _table.uuid('id').primary();
+            _table.string('address');
+            _table.integer('status');
+            _table.timestamps();
+        });
+
+        await _knex.schema.createTable('phones', _table => {
+            _table.uuid('id').primary();
+            _table.string('number');
+            _table.integer('status');
+            _table.timestamps();
+        });
+
+        await _knex.schema.createTable('legal_entities', _table => {
+            _table.uuid('id').primary();
+            _table.string('name');
+            _table.string('registration_id').unique();
+            _table.string('tax_id').unique();
+            _table.integer('type');
+            _table.timestamps();
+        });
+
+        await _knex.schema.createTable('contracts', _table => {
+            _table.uuid('id').primary();
+            _table.date('start_date');
+            _table.date('end_date');
+            _table.timestamps();
+        });
+
+        await _knex.schema.createTable('contracts_clients', _table => {
+            _table.uuid('client_id').references('id').inTable('legal_entities').onDelete('CASCADE');
+            _table.uuid('contract_id').references('id').inTable('contracts').onDelete('CASCADE');
+            _table.unique(['client_id', 'contract_id']);
+        });
+
+        await _knex.schema.createTable('contracts_signees', _table => {
+            _table.uuid('signee_id').references('id').inTable('legal_entities').onDelete('CASCADE');
+            _table.uuid('contract_id').references('id').inTable('contracts').onDelete('CASCADE');
+            _table.unique(['signee_id', 'contract_id']);
+        });
+
+        await _knex.schema.createTable('contracts_document_keepers', _table => {
+            _table.uuid('document_keeper_id').references('id').inTable('legal_entities').onDelete('CASCADE');
+            _table.uuid('contract_id').references('id').inTable('contracts').onDelete('CASCADE');
+            _table.unique(['document_keeper_id', 'contract_id']);
+        });
+
+        await _knex.schema.createTable('contracts_emails', _table => {
+            _table.uuid('email_id').references('id').inTable('emails').onDelete('CASCADE');
+            _table.uuid('contract_id').references('id').inTable('contracts').onDelete('CASCADE');
+            _table.unique(['email_id', 'contract_id']);
+        });
+
+        await _knex.schema.createTable('contracts_phones', _table => {
+            _table.uuid('phone_id').references('id').inTable('phones').onDelete('CASCADE');
+            _table.uuid('contract_id').references('id').inTable('contracts').onDelete('CASCADE');
+            _table.unique(['phone_id', 'contract_id']);
+        });
     })();
 };
 

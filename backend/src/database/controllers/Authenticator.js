@@ -73,14 +73,14 @@ class Authenticator {
         return this.models.AuthAdmin
             .query()
             .update({ status: this.statusEnumValidator.validate(_status) })
-            .where('email', _email);
+            .where({ email: _email });
     }
 
     async authenticateAdminByEmailAndPassword (_email, _password) {
         const _admin = await this.models.AuthAdmin
             .query()
             .select('email', 'salt', 'password', 'num_of_failed_login_attempts', 'status')
-            .where('email', _email)
+            .where({ email: _email })
             .first();
 
         if (_admin.status === this.STATUS_INACTIVE) {
@@ -102,7 +102,7 @@ class Authenticator {
                     status: this.STATUS_DISABLED,
                     num_of_failed_login_attempts: _admin.num_of_failed_login_attempts + 1
                 })
-                .where('email', _email);
+                .where({ email: _email });
 
             throw new Error(this.ERROR_ACCOUNT_LOCKED);
         }
@@ -110,7 +110,7 @@ class Authenticator {
         await this.models.AuthAdmin
             .query()
             .update({ num_of_failed_login_attempts: _admin.num_of_failed_login_attempts + 1 })
-            .where('email', _email);
+            .where({ email: _email });
 
         throw new Error(this.ERROR_PASSWORD_INVALID);
     }
@@ -159,7 +159,7 @@ class Authenticator {
         return this.models.AuthGroup
             .query()
             .update({ status: this.statusEnumValidator.validate(_status) })
-            .where('name', _name);
+            .where({ name: _name });
     }
 
     async associateAdminAndGroup (_adminEmail, _groupName) {
@@ -206,10 +206,22 @@ class Authenticator {
             .join('auth_groups', 'auth_admins_groups.group_id', 'auth_groups.id')
             .join('auth_resources_groups', 'auth_resources_groups.group_id', 'auth_groups.id')
             .join('auth_resources', 'auth_resources_groups.resource_id', 'auth_resources.id')
-            .select('auth_admins.email', 'auth_resources.name as resourceName', 'auth_resources.method as resourceMethod')
-            .where('email', '=', _email)
-            .where('resourceName', '=', _resourceName)
-            .where('resourceMethod', this.methodEnumValidator.validate(_resourceMethod));
+            .select({
+                email: `${this.models.AuthAdmin.tableName}.email`,
+                adminStatus: `${this.models.AuthAdmin.tableName}.status`,
+                groupStatus: `${this.models.AuthGroup.tableName}.status`,
+                resourceName: `${this.models.AuthResource.tableName}.name`,
+                resourceMethod: `${this.models.AuthResource.tableName}.method`,
+                resourceStatus: `${this.models.AuthResource.tableName}.status`
+            })
+            .where({
+                email: _email,
+                resourceName: _resourceName,
+                resourceMethod: this.methodEnumValidator.validate(_resourceMethod),
+                adminStatus: this.STATUS_ACTIVE,
+                groupStatus: this.STATUS_ACTIVE,
+                resourceStatus: this.STATUS_ACTIVE
+            });
 
         if (_resourceAssociations.length === 0) {
             throw new Error(this.ERROR_ADMIN_RESOURCE_DOES_NOT_EXIST);

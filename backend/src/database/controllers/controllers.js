@@ -10,16 +10,24 @@ const knex = Knex(config.get(['knex', process.env.NODE_ENV]));
 Model.knex(knex);
 
 const Authenticator = require('./Authenticator');
+const Contracts = require('./Contracts');
 
 const AuthAdminModel = require('../models/AuthAdmin');
 const AuthGroupModel = require('../models/AuthGroup');
 const AuthResourceModel = require('../models/AuthResource');
+
+const LegalEntityModel = require('../models/LegalEntity');
+const ContractModel = require('../models/Contract');
 
 const CONTROLLERS = {
     authenticator: new Authenticator({
         AuthAdmin: AuthAdminModel,
         AuthGroup: AuthGroupModel,
         AuthResource: AuthResourceModel
+    }),
+    contracts: new Contracts({
+        LegalEntity: LegalEntityModel,
+        Contract: ContractModel
     })
 };
 

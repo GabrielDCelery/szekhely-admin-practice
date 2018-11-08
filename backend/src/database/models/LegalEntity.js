@@ -3,8 +3,8 @@
 const { Model } = require('objection');
 const uuidv4 = require('uuid/v4');
 
-class AuthGroup extends Model {
-    static get tableName () {
+class LegalEntity extends Model {
+    static get tablerName () {
         return 'legal_entities';
     }
 
@@ -14,8 +14,9 @@ class AuthGroup extends Model {
             required: [],
             properties: {
                 id: { type: 'string' },
-                registration_number: { type: 'string' },
-                tax_number: { type: 'string' },
+                name: { type: 'string' },
+                registration_id: { type: 'string' },
+                tax_id: { type: 'string' },
                 type: { type: 'integer' }
             }
         };
@@ -34,4 +35,4 @@ class AuthGroup extends Model {
     }
 }
 
-module.exports = AuthGroup;
+module.exports = LegalEntity;
