@@ -45,8 +45,7 @@ export default {
   },
   methods: {
     submit() {
-      console.log('fetch data');
-      axios.get('http://localhost:8081').then(console.log).catch(console.log);
+      axios.get('/posts').then(console.log).catch(console.log);
     }
   }
 };
