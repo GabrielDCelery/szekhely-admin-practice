@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
   name: "HelloWorld",
@@ -44,8 +44,8 @@ export default {
     msg: String
   },
   methods: {
-    submit() {
-      axios.get('/posts').then(console.log).catch(console.log);
+    async submit() {
+      console.log(await axios.get("/posts"));
     }
   }
 };
