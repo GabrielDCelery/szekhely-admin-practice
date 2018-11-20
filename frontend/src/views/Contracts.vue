@@ -37,6 +37,24 @@
                                                     </v-layout>
                                                     <v-layout>
                                                         <v-flex xs12>
+                                                            <v-select 
+                                                                label="Company Type"
+                                                                :items="['', 'Kft.', 'Bt.']"
+                                                            >
+                                                            </v-select>
+                                                        </v-flex>
+                                                    </v-layout>
+                                                </v-card-text>
+                                            </v-card>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                    <v-expansion-panel>
+                                        <v-expansion-panel-content>
+                                            <div slot="header">Manager Details</div>
+                                            <v-card>
+                                                <v-card-text>
+                                                    <v-layout>
+                                                        <v-flex xs12>
                                                             <v-text-field 
                                                                 label="Manager Name"
                                                             >
@@ -118,57 +136,11 @@
                                                     <v-layout>
                                                         <v-flex xs6>
                                                             <v-checkbox 
-                                                                label="Valid Contract"
+                                                                label="Monthly Postage"
                                                             >
                                                             </v-checkbox>
                                                         </v-flex>
-                                                        <v-flex xs6>
-                                                            <v-checkbox 
-                                                                label="Expired Contract"
-                                                            >
-                                                            </v-checkbox>
-                                                        </v-flex>  
                                                     </v-layout> 
-                                                    <v-layout>
-                                                        <v-flex>
-                                                            <v-checkbox 
-                                                            label="Last Contract"
-                                                            >
-                                                            </v-checkbox>
-                                                        </v-flex>
-                                                    </v-layout>
-                                                    <v-layout>
-                                                        <v-flex xs6>
-                                                            <v-text-field 
-                                                                label="Beginning Interval Start"
-                                                                v-model="formatted"
-                                                            >
-                                                            </v-text-field>
-                                                        </v-flex>
-                                                        <v-flex xs6>
-                                                            <v-text-field 
-                                                                label="Beginning Interval End"
-                                                                v-model="formatted"
-                                                            >
-                                                            </v-text-field>
-                                                        </v-flex>  
-                                                    </v-layout> 
-                                                    <v-layout>
-                                                        <v-flex xs6>
-                                                            <v-text-field 
-                                                                label="Expiry Interval Start"
-                                                                v-model="formatted"
-                                                            >
-                                                            </v-text-field>
-                                                        </v-flex>
-                                                        <v-flex xs6>
-                                                            <v-text-field 
-                                                                label="Expiry Interval End"
-                                                                v-model="formatted"
-                                                            >
-                                                            </v-text-field>
-                                                        </v-flex>  
-                                                    </v-layout>
                                                 </v-card-text>
                                             </v-card>
                                         </v-expansion-panel-content>
